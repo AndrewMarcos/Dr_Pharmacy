@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
@@ -23,24 +25,32 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URL;
 
 public class NEWS extends AppCompatActivity {
 
     private static final int CAMERA_REQUEST = 1888;
     private static int RESULT_LOAD_IMAGE = 1;
     int Max_ID;
-    Button set_image, send, cancel;
+    Button  send, cancel;
+    ImageView set_image;
     ImageView imageView;
     String pic_1, pic_2;
     EditText editText;
-    RelativeLayout relativeLayout;
+    LinearLayout relativeLayout;
     ProgressBar progressBar;
     Firebase myFirebaseRef;
 
     Long NewsNo;
-    String imgString="no image";
+    String imgString = "no image";
 
 
     @Override
@@ -50,7 +60,7 @@ public class NEWS extends AppCompatActivity {
 
         myFirebaseRef = new Firebase("https://romance-pharmacy.firebaseio.com/");
 
-        Query queryRef =myFirebaseRef.child("NewsNo");
+        Query queryRef = myFirebaseRef.child("NewsNo");
         queryRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
@@ -65,15 +75,14 @@ public class NEWS extends AppCompatActivity {
         Intent intent = getIntent();
         Max_ID = intent.getIntExtra("MaxID", 0);
 
-        set_image = (Button) findViewById(R.id.button_set_image);
+        set_image = (ImageView) findViewById(R.id.button_set_image);
         send = (Button) findViewById(R.id.button_send_news);
         cancel = (Button) findViewById(R.id.button_cancel);
         imageView = (ImageView) findViewById(R.id.imageView_NEWS);
         editText = (EditText) findViewById(R.id.editText_NEWS);
-        relativeLayout = (RelativeLayout) findViewById(R.id.layout);
+        relativeLayout = (LinearLayout) findViewById(R.id.layout);
         progressBar = (ProgressBar) findViewById(R.id.progressBar_send_news);
         progressBar.setVisibility(View.INVISIBLE);
-
 
 
         set_image.setOnClickListener(new View.OnClickListener() {
@@ -158,7 +167,7 @@ public class NEWS extends AppCompatActivity {
         } else if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK && data != null) {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
 
-           imgString = Base64.encodeToString(getBytesFromBitmap(photo),
+            imgString = Base64.encodeToString(getBytesFromBitmap(photo),
                     Base64.NO_WRAP);
 
             imageView.setImageBitmap(photo);
@@ -170,12 +179,51 @@ public class NEWS extends AppCompatActivity {
 
     public void postData() {
 
-        myFirebaseRef.child("NewsNo").setValue(NewsNo+1);
-        myFirebaseRef.child("News").child(NewsNo+1+"").child("Picture").setValue(imgString);
-        myFirebaseRef.child("News").child(NewsNo+1+"").child("Text").setValue(editText.getText().toString());
+        myFirebaseRef.child("NewsNo").setValue(NewsNo + 1);
+        myFirebaseRef.child("News").child(NewsNo + 1 + "").child("Picture").setValue(imgString);
+        myFirebaseRef.child("News").child(NewsNo + 1 + "").child("Text").setValue(editText.getText().toString());
+
+        new DownloadFilesTask().execute(editText.getText().toString());
 
         Intent intent = new Intent(NEWS.this, Set_News.class);
         startActivity(intent);
+    }
+
+    private class DownloadFilesTask extends AsyncTask<String, Integer, Long> {
+        protected Long doInBackground(String... urls) {
+            int count = urls.length;
+            long totalSize = 0;
+
+            OkHttpClient client = new OkHttpClient();
+
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, "{\"to\": \"/topics/news\",\"data\":" +
+                    " {\"message\":\"This is a Firebase test Cloud Messaging Topic Message!\"," +
+                    "\"text\":\"" + urls[0] + "\"," +
+                    "\"title\": \"صيدلية\"}}");
+            Request request = new Request.Builder()
+                    .url("https://fcm.googleapis.com/fcm/send")
+                    .post(body)
+                    .addHeader("content-type", "application/json")
+                    .addHeader("authorization", "key=AAAATZMXjSE:APA91bE5tdGwQFMAHGl5bIZudRAb0cAtrXdMsKTOL_LGjlkq1uCWFY6Tn-jj4QhX_2gioXMjQ3njcCOXKazz8Zsqx5mzO7NIiezie4UK9pINs-btNesWg7qg4M0Z1V0H9HEGNfkrENyN")
+                    .addHeader("cache-control", "no-cache")
+                    .addHeader("postman-token", "c5b46db6-dd4e-4a39-f6bc-5d2f8bf42bca")
+                    .build();
+
+            try {
+                Response response = client.newCall(request).execute();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return totalSize;
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+        }
+
+        protected void onPostExecute(Long result) {
+        }
     }
 
 }

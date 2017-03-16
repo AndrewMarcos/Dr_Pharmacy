@@ -4,7 +4,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -12,29 +11,18 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.Query;
 import com.firebase.client.ValueEventListener;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 
 import pharmacy.morcos.andrew.drpharmacy.Adapters.NEWS_Adapter;
 import pharmacy.morcos.andrew.drpharmacy.Data.data_news;
-import pharmacy.morcos.andrew.drpharmacy.jsondata.Jsondata;
-
 
 
 public class Set_News extends AppCompatActivity {
@@ -44,9 +32,6 @@ public class Set_News extends AppCompatActivity {
     NEWS_Adapter news_adapter;
     ListView listView_news;
     ProgressBar progressBar;
-    String url;
-    RequestQueue queue;
-    Jsondata dd;
 
     Firebase myFirebase;
     DataSnapshot myChild;
@@ -58,25 +43,25 @@ public class Set_News extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         res = getResources();
         setSupportActionBar(toolbar);
-        myFirebase = new Firebase("https://romance-pharmacy.firebaseio.com/");
+        myFirebase = new Firebase(getResources().getString(R.string.firebaseLink));
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+    /*    FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 getID();
 
             }
-        });
+        });*/
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
         listView_news = (ListView) findViewById(R.id.listView_NEWS);
         progressBar = (ProgressBar) findViewById(R.id.progressBar_NEWS);
 
-        queue = Volley.newRequestQueue(Set_News.this);
-        res = getResources();
-        url = res.getString(R.string.Get_NEWS);
+        //queue = Volley.newRequestQueue(Set_News.this);
+        //res = getResources();
+        //  url = res.getString(R.string.Get_NEWS);
 
         listView_news.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -110,11 +95,11 @@ public class Set_News extends AppCompatActivity {
 
     }
 
-    public void getID() {
+   /* public void getID() {
 
 
-        RequestQueue queue = Volley.newRequestQueue(Set_News.this);
-        String url = res.getString(R.string.get_ID);
+      //  RequestQueue queue = Volley.newRequestQueue(Set_News.this);
+     //   String url = res.getString(R.string.get_ID);
         StringRequest str = new StringRequest(url,
                 new Response.Listener<String>() {
                     @Override
@@ -151,7 +136,7 @@ public class Set_News extends AppCompatActivity {
                     }
                 });
         queue.add(str);
-    }
+    }*/
 
     @Override
     protected void onStart() {
@@ -168,9 +153,9 @@ public class Set_News extends AppCompatActivity {
                 Iterable<DataSnapshot> myChildren = snapshot.getChildren();
                 while (myChildren.iterator().hasNext()) {
                     int i = 0;
-                   myChild  = myChildren.iterator().next();
+                    myChild = myChildren.iterator().next();
                     try {
-                        DataArray.add(new data_news(myChild.child("Picture").getValue().toString(), myChild.child("Text").getValue().toString(),myChild.getKey()));
+                        DataArray.add(0, new data_news(myChild.child("Picture").getValue().toString(), myChild.child("Text").getValue().toString(), myChild.getKey()));
                     } catch (Exception e) {
                     }
                     i++;
